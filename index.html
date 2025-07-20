@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Flow | Controle suas Finanças</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap');
+    body {
+      font-family: 'Inter', 'Orbitron', sans-serif;
+      background: linear-gradient(120deg, #181824 0%, #2b2d42 100%);
+      min-height: 100vh;
+      color: #e5e7eb;
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #00b4d8 0%, #3a86ff 60%, #8338ec 100%);
+      box-shadow: 0 4px 32px 0 rgba(58,134,255,0.15), 0 1.5px 8px 0 rgba(131,56,236,0.10);
+      border-bottom: 2px solid #00b4d8;
+    }
+    .card {
+      background: linear-gradient(120deg, rgba(0,180,216,0.10) 0%, rgba(131,56,236,0.10) 100%);
+      border-radius: 18px;
+      box-shadow: 0 2px 16px 0 rgba(58,134,255,0.10), 0 1.5px 8px 0 rgba(131,56,236,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 32px 0 rgba(58,134,255,0.18), 0 2px 12px 0 rgba(131,56,236,0.12);
+    }
+    .btn-modern,
+    .gradient-bg,
+    .bg-primary-600,
+    .bg-danger-600,
+    .bg-secondary-600,
+    .bg-primary-700,
+    .bg-danger-700,
+    .bg-secondary-700 {
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px 0 rgba(58,134,255,0.10), 0 1.5px 8px 0 rgba(131,56,236,0.08);
+      font-weight: 600;
+    }
+    .btn-modern::after,
+    .gradient-bg::after,
+    .bg-primary-600::after,
+    .bg-danger-600::after,
+    .bg-secondary-600::after,
+    .bg-primary-700::after,
+    .bg-danger-700::after,
+    .bg-secondary-700::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(131,56,236,0.18) 0%, transparent 70%);
+      opacity: 0.7;
+      transform: translate(-50%, -50%);
+      transition: width 0.4s, height 0.4s, opacity 0.4s;
+      z-index: 0;
+    }
+    .btn-modern:hover,
+    .gradient-bg:hover,
+    .bg-primary-600:hover,
+    .bg-danger-600:hover,
+    .bg-secondary-600:hover,
+    .bg-primary-700:hover,
+    .bg-danger-700:hover,
+    .bg-secondary-700:hover {
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 6px 24px 0 rgba(58,134,255,0.18), 0 2px 12px 0 rgba(131,56,236,0.14);
+    }
+    .btn-modern:hover::after,
+    .gradient-bg:hover::after,
+    .bg-primary-600:hover::after,
+    .bg-danger-600:hover::after,
+    .bg-secondary-600:hover::after,
+    .bg-primary-700:hover::after,
+    .bg-danger-700:hover::after,
+    .bg-secondary-700:hover::after {
+      width: 220%;
+      height: 220%;
+      opacity: 1;
+    }
+    .btn-modern:active,
+    .gradient-bg:active,
+    .bg-primary-600:active,
+    .bg-danger-600:active,
+    .bg-secondary-600:active,
+    .bg-primary-700:active,
+    .bg-danger-700:active,
+    .bg-secondary-700:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 4px 0 rgba(58,134,255,0.10), 0 1px 4px 0 rgba(131,56,236,0.08);
+    }
+    button i {
+      transition: transform 0.3s;
+    }
+    button:hover i {
+      transform: scale(1.2) rotate(-8deg);
+    }
+    .tab-btn {
+      padding: 0.5rem 1.25rem;
+      font-weight: 600;
+      border-radius: 0.75rem 0.75rem 0 0;
+      background: rgba(58,134,255,0.10);
+      color: #e5e7eb;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .tab-btn.active {
+      background: linear-gradient(90deg, #00b4d8 0%, #3a86ff 60%, #8338ec 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px 0 rgba(58,134,255,0.18);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+    #dashboard-chart {
+      width: 100% !important;
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.07);
+      border-radius: 16px;
+      box-shadow: 0 2px 16px 0 rgba(58,134,255,0.10);
+      padding: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div id="login-page" class="min-h-screen flex items-center justify-center p-2 sm:p-4">
+    <div class="w-full max-w-xs sm:max-w-md mx-auto px-2 sm:px-0">
+      <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+        <div class="gradient-bg p-4 sm:p-6 text-white text-center relative">
+          <i class="fas fa-lock text-4xl mb-4"></i>
+          <h1 class="text-2xl font-bold">Acesse sua conta</h1>
+          <p class="text-white text-opacity-90">Seja bem-vindo(a) novamente</p>
+        </div>
+        <div class="p-4 sm:p-6 md:p-8">
+          <div id="login-alert" class="hidden mb-4 p-3 rounded-md text-sm"></div>
+          <form id="login-form" class="space-y-4">
+            <div>
+              <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+              <input type="text" id="username" placeholder="Digite seu usuário" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+            </div>
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+              <input type="password" id="password" placeholder="Digite sua senha" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+            </div>
+            <button type="submit" class="w-full gradient-bg hover:opacity-90 text-white py-2 px-4 rounded-lg font-medium transition flex items-center justify-center">
+              <i class="fas fa-sign-in-alt mr-2"></i> Entrar
+            </button>
+          </form>
+          <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+              <a href="#" id="register-link" class="text-primary-600 hover:text-primary-500 font-medium">Criar conta</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="register-page" class="min-h-screen flex items-center justify-center p-2 sm:p-4 hidden">
+    <div class="w-full max-w-xs sm:max-w-md mx-auto px-2 sm:px-0">
+      <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+        <div class="gradient-bg p-4 sm:p-6 text-white text-center relative">
+          <i class="fas fa-user-plus text-4xl mb-4"></i>
+          <h1 class="text-2xl font-bold">Crie sua conta</h1>
+          <p class="text-white text-opacity-90">Comece a controlar suas finanças</p>
+        </div>
+        <div class="p-4 sm:p-6 md:p-8">
+          <div id="register-alert" class="hidden mb-4 p-3 rounded-md text-sm"></div>
+          <form id="register-form" class="space-y-4">
+            <div>
+              <label for="reg-name" class="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
+              <input type="text" id="reg-name" placeholder="Seu nome completo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+            </div>
+            <div>
+              <label for="reg-email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+              <input type="email" id="reg-email" placeholder="seu@email.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+            </div>
+            <div>
+              <label for="reg-username" class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+              <input type="text" id="reg-username" placeholder="Escolha um nome de usuário" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+            </div>
+            <div>
+              <label for="reg-password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+              <input type="password" id="reg-password" placeholder="Crie uma senha segura" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+            </div>
+            <div>
+              <label for="reg-confirm-password" class="block text-sm font-medium text-gray-700 mb-1">Confirmar senha</label>
+              <input type="password" id="reg-confirm-password" placeholder="Repita sua senha" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+            </div>
+            <button type="submit" class="w-full gradient-bg hover:opacity-90 text-white py-2 px-4 rounded-lg font-medium transition flex items-center justify-center">
+              <i class="fas fa-user-plus mr-2"></i> Cadastrar
+            </button>
+          </form>
+          <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+              Já tem uma conta? 
+              <a href="#" id="login-link" class="text-primary-600 hover:text-primary-500 font-medium">Faça login</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="finance-app" class="hidden">
+    <div class="max-w-full sm:max-w-3xl mx-auto p-2 sm:p-4 md:p-6">
+      <header class="mb-8 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div class="text-center sm:text-left">
+          <h1 class="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg mb-2 flex items-center justify-center sm:justify-start">
+            <i class="fas fa-wallet text-primary-400 mr-3"></i>
+            SmartFlow
+          </h1>
+          <p class="text-white drop-shadow mb-2">Bem-vindo, <span id="current-user" class="font-medium"></span></p>
+        </div>
+        <button id="logout-btn" class="btn-modern flex items-center text-danger-600 hover:text-danger-800 px-4 py-2">
+          <i class="fas fa-sign-out-alt mr-2"></i>
+          <span class="hidden sm:inline">Sair</span>
+        </button>
+      </header>
+      <div class="flex space-x-2 mb-6">
+        <button class="tab-btn active" data-tab="dashboard"><i class="fas fa-chart-line mr-2"></i>Dashboard</button>
+        <button class="tab-btn" data-tab="transactions"><i class="fas fa-list mr-2"></i>Transações</button>
+        <button class="tab-btn" data-tab="stock"><i class="fas fa-boxes mr-2"></i>Estoque</button>
+      </div>
+      <div id="dashboard-tab" class="tab-content active">
+        <div class="mb-8 fade-in">
+          <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+            <i class="fas fa-chart-line text-primary-400 mr-2"></i> Dashboard
+          </h2>
+          <canvas id="dashboard-chart"></canvas>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div class="card p-4 border-l-4 border-primary-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-200">Receitas</p>
+                <p class="text-2xl font-bold text-white" id="total-income">R$ 0,00</p>
+              </div>
+              <div class="bg-primary-100 p-3 rounded-full">
+                <i class="fas fa-arrow-up text-primary-600"></i>
+              </div>
+            </div>
+          </div>
+          <div class="card p-4 border-l-4 border-danger-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-200">Despesas</p>
+                <p class="text-2xl font-bold text-white" id="total-expense">R$ 0,00</p>
+              </div>
+              <div class="bg-danger-100 p-3 rounded-full">
+                <i class="fas fa-arrow-down text-danger-600"></i>
+              </div>
+            </div>
+          </div>
+          <div class="card p-4 border-l-4 border-secondary-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-200">Saldo</p>
+                <p class="text-2xl font-bold text-white" id="balance">R$ 0,00</p>
+              </div>
+              <div class="bg-secondary-100 p-3 rounded-full">
+                <i class="fas fa-balance-scale text-secondary-600"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="transactions-tab" class="tab-content">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6 fade-in">
+          <div class="p-2 sm:p-4 md:p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Adicionar Transação</h2>
+            <div id="alert" class="hidden mb-4 p-3 rounded-md text-sm"></div>
+            <form id="transaction-form" class="space-y-4">
+              <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                <input type="text" id="description" placeholder="Ex: Salário, Aluguel, Supermercado..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                  <input type="number" id="amount" step="0.01" min="0.01" placeholder="0,00" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+                </div>
+                <div>
+                  <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                  <select id="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+                    <option value="receita">Receita</option>
+                    <option value="despesa">Despesa</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                <button type="submit" class="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg font-medium transition flex items-center justify-center">
+                  <i class="fas fa-plus mr-2"></i> Adicionar
+                </button>
+                <button type="button" id="clear-all" class="flex-1 bg-danger-600 hover:bg-danger-700 text-white py-2 px-4 rounded-lg font-medium transition flex items-center justify-center">
+                  <i class="fas fa-trash-alt mr-2"></i> Limpar Tudo
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md overflow-hidden fade-in">
+          <div class="p-2 sm:p-4 md:p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+              <h2 class="text-lg font-semibold text-gray-800">Histórico de Transações</h2>
+              <div class="relative w-full sm:w-auto">
+                <select id="filter" class="appearance-none bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option value="all">Todas</option>
+                  <option value="receita">Receitas</option>
+                  <option value="despesa">Despesas</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-x-auto w-full">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                    <th scope="col" class="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                    <th scope="col" class="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                    <th scope="col" class="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="transactions-list" class="bg-white divide-y divide-gray-200">
+                  <!-- Transactions will be added here dynamically -->
+                </tbody>
+              </table>
+              <div id="empty-state" class="py-12 text-center">
+                <i class="fas fa-receipt text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500">Nenhuma transação cadastrada</p>
+                <p class="text-sm text-gray-400 mt-1">Adicione sua primeira transação usando o formulário acima</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="stock-tab" class="tab-content">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6 fade-in">
+          <div class="p-2 sm:p-4 md:p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Controle de Estoque</h2>
+            <form id="stock-form" class="space-y-4 mb-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">Produto</label>
+                  <input type="text" id="product-name" placeholder="Nome do produto" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+                </div>
+                <div>
+                  <label for="product-qty" class="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
+                  <input type="number" id="product-qty" min="1" placeholder="Quantidade" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition">
+                </div>
+              </div>
+              <button type="submit" class="w-full bg-secondary-600 hover:bg-secondary-700 text-white py-2 px-4 rounded-lg font-medium transition flex items-center justify-center">
+                <i class="fas fa-plus mr-2"></i> Adicionar Produto
+              </button>
+            </form>
+            <div class="overflow-x-auto w-full">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+                    <th class="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
+                    <th class="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="stock-list" class="bg-white divide-y divide-gray-200">
+                  <!-- Produtos serão adicionados aqui -->
+                </tbody>
+              </table>
+              <div id="stock-empty" class="py-6 text-center text-gray-400">Nenhum produto cadastrado</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="mt-8 text-center text-sm font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-400 text-white py-4 rounded-xl shadow-lg tracking-wide">
+        <p>
+          &copy; <span id="year"></span> <span class="font-orbitron">SmartFlow</span> | Feito por <strong class="text-yellow-300 drop-shadow">Alexandre Melo 👑</strong>
+        </p>
+      </footer>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      // Usuários
+      const users = [
+        { id: 1, name: "Alexandre Melo", username: "Ceo", password: "ceoo", email: "ceo@gmail.com" }
+      ];
+      // Elementos
+      const loginPage = document.getElementById('login-page');
+      const registerPage = document.getElementById('register-page');
+      const financeApp = document.getElementById('finance-app');
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const loginAlert = document.getElementById('login-alert');
+      const registerAlert = document.getElementById('register-alert');
+      const registerLink = document.getElementById('register-link');
+      const loginLink = document.getElementById('login-link');
+      const logoutBtn = document.getElementById('logout-btn');
+      const currentUserEl = document.getElementById('current-user');
+      const transactionForm = document.getElementById('transaction-form');
+      const descriptionInput = document.getElementById('description');
+      const amountInput = document.getElementById('amount');
+      const typeSelect = document.getElementById('type');
+      const filterSelect = document.getElementById('filter');
+      const transactionsList = document.getElementById('transactions-list');
+      const emptyState = document.getElementById('empty-state');
+      const alertBox = document.getElementById('alert');
+      const totalIncomeEl = document.getElementById('total-income');
+      const totalExpenseEl = document.getElementById('total-expense');
+      const balanceEl = document.getElementById('balance');
+      const clearAllBtn = document.getElementById('clear-all');
+      // Estoque
+      const stockForm = document.getElementById('stock-form');
+      const productNameInput = document.getElementById('product-name');
+      const productQtyInput = document.getElementById('product-qty');
+      const stockList = document.getElementById('stock-list');
+      const stockEmpty = document.getElementById('stock-empty');
+      let currentUser = null;
+      let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+      let stock = JSON.parse(localStorage.getItem('stock')) || [];
+      loginForm.addEventListener('submit', handleLogin);
+      registerForm.addEventListener('submit', handleRegister);
+      registerLink.addEventListener('click', showRegisterPage);
+      loginLink.addEventListener('click', showLoginPage);
+      logoutBtn.addEventListener('click', handleLogout);
+      transactionForm.addEventListener('submit', addTransaction);
+      filterSelect.addEventListener('change', updateUI);
+      clearAllBtn.addEventListener('click', clearAllTransactions);
+      transactionsList.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-btn')) {
+          const transactionId = parseInt(e.target.closest('.delete-btn').dataset.id);
+          deleteTransaction(transactionId);
+        }
+      });
+      // Estoque listeners
+      if (stockForm) stockForm.addEventListener('submit', addProduct);
+      if (stockList) stockList.addEventListener('click', handleStockActions);
+
+      function handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) {
+          showAuthAlert('Por favor, preencha todos os campos.', 'danger', loginAlert);
+          return;
+        }
+        const user = users.find(u => u.username === username && u.password === password);
+        if (user) {
+          currentUser = user;
+          showFinanceApp();
+          showAuthAlert('Login realizado com sucesso!', 'success', loginAlert);
+          currentUserEl.textContent = user.name;
+        } else {
+          showAuthAlert('Usuário ou senha incorretos.', 'danger', loginAlert);
+        }
+      }
+      function handleRegister(e) {
+        e.preventDefault();
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const username = document.getElementById('reg-username').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const confirmPassword = document.getElementById('reg-confirm-password').value;
+        if (!name || !email || !username || !password || !confirmPassword) {
+          showAuthAlert('Por favor, preencha todos os campos.', 'danger', registerAlert);
+          return;
+        }
+        if (password !== confirmPassword) {
+          showAuthAlert('As senhas não coincidem.', 'danger', registerAlert);
+          return;
+        }
+        const usernameExists = users.some(u => u.username === username);
+        const emailExists = users.some(u => u.email === email);
+        if (usernameExists) {
+          showAuthAlert('Este nome de usuário já está em uso.', 'danger', registerAlert);
+          return;
+        }
+        if (emailExists) {
+          showAuthAlert('Este e-mail já está cadastrado.', 'danger', registerAlert);
+          return;
+        }
+        const newUser = {
+          id: users.length + 1,
+          name,
+          email,
+          username,
+          password
+        };
+        users.push(newUser);
+        showAuthAlert('Cadastro realizado com sucesso! Faça login para continuar.', 'success', registerAlert);
+        showLoginPage();
+        loginForm.reset();
+      }
+      function handleLogout() {
+        currentUser = null;
+        showLoginPage();
+        loginForm.reset();
+      }
+      function showLoginPage() {
+        loginPage.classList.remove('hidden');
+        registerPage.classList.add('hidden');
+        financeApp.classList.add('hidden');
+      }
+      function showRegisterPage(e) {
+        e.preventDefault();
+        loginPage.classList.add('hidden');
+        registerPage.classList.remove('hidden');
+        financeApp.classList.add('hidden');
+      }
+      function showFinanceApp() {
+        loginPage.classList.add('hidden');
+        registerPage.classList.add('hidden');
+        financeApp.classList.remove('hidden');
+        updateUI();
+        renderStock();
+      }
+      function showAuthAlert(message, type, element) {
+        element.textContent = message;
+        element.className = `block mb-4 p-3 rounded-md text-sm`;
+        if (type === 'success') {
+          element.classList.add('bg-green-100', 'text-green-700');
+        } else {
+          element.classList.add('bg-red-100', 'text-red-700');
+        }
+        setTimeout(() => {
+          element.classList.add('hidden');
+        }, 3000);
+      }
+      function addTransaction(e) {
+        e.preventDefault();
+        const description = descriptionInput.value.trim();
+        const amount = parseFloat(amountInput.value);
+        const type = typeSelect.value;
+        if (!description) {
+          showAlert('Por favor, insira uma descrição.', 'danger');
+          descriptionInput.focus();
+          return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+          showAlert('Por favor, insira um valor válido maior que zero.', 'danger');
+          amountInput.focus();
+          return;
+        }
+        const transaction = {
+          id: Date.now(),
+          userId: currentUser.id,
+          description,
+          amount,
+          type,
+          date: new Date().toISOString()
+        };
+        transactions.push(transaction);
+        saveTransactions();
+        updateUI();
+        transactionForm.reset();
+        descriptionInput.focus();
+        showAlert('Transação adicionada com sucesso!', 'success');
+      }
+      function deleteTransaction(id) {
+        transactions = transactions.filter(transaction => transaction.id !== id);
+        saveTransactions();
+        updateUI();
+        showAlert('Transação removida com sucesso!', 'success');
+      }
+      function clearAllTransactions() {
+        transactions = transactions.filter(t => t.userId !== currentUser.id);
+        saveTransactions();
+        updateUI();
+        showAlert('Todas as transações foram removidas.', 'success');
+      }
+      function saveTransactions() {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+      }
+      function updateUI() {
+        const filter = filterSelect.value;
+        let filteredTransactions = transactions.filter(t => t.userId === currentUser.id);
+        if (filter !== 'all') {
+          filteredTransactions = filteredTransactions.filter(
+            transaction => transaction.type === filter
+          );
+        }
+        transactionsList.innerHTML = '';
+        if (filteredTransactions.length > 0) {
+          emptyState.classList.add('hidden');
+          filteredTransactions.forEach(transaction => {
+            const row = document.createElement('tr');
+            row.className = 'fade-in';
+            row.innerHTML = `
+              <td class="px-2 sm:px-4 py-3 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10 rounded-full ${transaction.type === 'receita' ? 'bg-primary-100' : 'bg-danger-100'} flex items-center justify-center">
+                    <i class="${transaction.type === 'receita' ? 'fas fa-arrow-up text-primary-600' : 'fas fa-arrow-down text-danger-600'}"></i>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">${transaction.description}</div>
+                    <div class="text-sm text-gray-500">${formatDate(transaction.date)}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-2 sm:px-4 py-3 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${transaction.type === 'receita' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                  ${transaction.type === 'receita' ? 'Receita' : 'Despesa'}
+                </span>
+              </td>
+              <td class="px-2 sm:px-4 py-3 whitespace-nowrap text-sm ${transaction.type === 'receita' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}">
+                ${formatCurrency(transaction.amount)}
+              </td>
+              <td class="px-2 sm:px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                <button data-id="${transaction.id}" class="delete-btn text-danger-600 hover:text-danger-900 mr-3">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </td>
+            `;
+            transactionsList.appendChild(row);
+          });
+        } else {
+          emptyState.classList.remove('hidden');
+        }
+        updateSummaryCards();
+        renderDashboardChart();
+      }
+      function updateSummaryCards() {
+        const userTransactions = transactions.filter(t => t.userId === currentUser.id);
+        const totalIncome = userTransactions
+          .filter(t => t.type === 'receita')
+          .reduce((sum, t) => sum + t.amount, 0);
+        const totalExpense = userTransactions
+          .filter(t => t.type === 'despesa')
+          .reduce((sum, t) => sum + t.amount, 0);
+        const balance = totalIncome - totalExpense;
+        totalIncomeEl.textContent = formatCurrency(totalIncome);
+        totalExpenseEl.textContent = formatCurrency(totalExpense);
+        balanceEl.textContent = formatCurrency(balance);
+        if (balance > 0) {
+          balanceEl.classList.remove('text-gray-800', 'text-danger-600');
+          balanceEl.classList.add('text-primary-600');
+        } else if (balance < 0) {
+          balanceEl.classList.remove('text-gray-800', 'text-primary-600');
+          balanceEl.classList.add('text-danger-600');
+        } else {
+          balanceEl.classList.remove('text-primary-600', 'text-danger-600');
+          balanceEl.classList.add('text-gray-800');
+        }
+      }
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(amount);
+      }
+      function formatDate(dateString) {
+        const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        return new Date(dateString).toLocaleDateString('pt-BR', options);
+      }
+      function showAlert(message, type) {
+        alertBox.textContent = message;
+        alertBox.className = `block mb-4 p-3 rounded-md text-sm`;
+        if (type === 'success') {
+          alertBox.classList.add('bg-green-100', 'text-green-700');
+        } else {
+          alertBox.classList.add('bg-red-100', 'text-red-700');
+        }
+        setTimeout(() => {
+          alertBox.classList.add('hidden');
+        }, 3000);
+      }
+      // Controle de Estoque
+      function addProduct(e) {
+        e.preventDefault();
+        const name = productNameInput.value.trim();
+        const qty = parseInt(productQtyInput.value);
+        if (!name || isNaN(qty) || qty < 1) return;
+        stock.push({ id: Date.now(), name, qty });
+        saveStock();
+        renderStock();
+        stockForm.reset();
+        productNameInput.focus();
+      }
+      function handleStockActions(e) {
+        const id = parseInt(e.target.closest('button')?.dataset.id);
+        if (e.target.classList.contains('edit-stock')) {
+          const item = stock.find(p => p.id === id);
+          if (item) {
+            productNameInput.value = item.name;
+            productQtyInput.value = item.qty;
+            stock = stock.filter(p => p.id !== id);
+            saveStock();
+            renderStock();
+          }
+        }
+        if (e.target.classList.contains('delete-stock')) {
+          stock = stock.filter(p => p.id !== id);
+          saveStock();
+          renderStock();
+        }
+      }
+      function saveStock() {
+        localStorage.setItem('stock', JSON.stringify(stock));
+      }
+      function renderStock() {
+        if (!stockList) return;
+        stockList.innerHTML = '';
+        if (stock.length === 0) {
+          stockEmpty.classList.remove('hidden');
+          return;
+        }
+        stockEmpty.classList.add('hidden');
+        stock.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="px-2 sm:px-4 py-3">${item.name}</td>
+            <td class="px-2 sm:px-4 py-3">${item.qty}</td>
+            <td class="px-2 sm:px-4 py-3 text-right">
+              <button data-id="${item.id}" class="edit-stock text-primary-600 hover:text-primary-900 mr-2"><i class="fas fa-edit"></i></button>
+              <button data-id="${item.id}" class="delete-stock text-danger-600 hover:text-danger-900"><i class="fas fa-trash-alt"></i></button>
+            </td>
+          `;
+          stockList.appendChild(row);
+        });
+      }
+      // Dashboard Chart.js
+      let dashboardChart;
+      function renderDashboardChart() {
+        const userTransactions = transactions.filter(t => t.userId === currentUser.id);
+        const receitas = userTransactions.filter(t => t.type === 'receita');
+        const despesas = userTransactions.filter(t => t.type === 'despesa');
+        const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const receitasPorMes = Array(12).fill(0);
+        const despesasPorMes = Array(12).fill(0);
+        receitas.forEach(t => {
+          const d = new Date(t.date);
+          receitasPorMes[d.getMonth()] += t.amount;
+        });
+        despesas.forEach(t => {
+          const d = new Date(t.date);
+          despesasPorMes[d.getMonth()] += t.amount;
+        });
+        const ctx = document.getElementById('dashboard-chart').getContext('2d');
+        if (dashboardChart) dashboardChart.destroy();
+        dashboardChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: meses,
+            datasets: [
+              {
+                label: 'Receitas',
+                data: receitasPorMes,
+                backgroundColor: 'rgba(34,197,94,0.7)',
+                borderRadius: 8
+              },
+              {
+                label: 'Despesas',
+                data: despesasPorMes,
+                backgroundColor: 'rgba(239,68,68,0.7)',
+                borderRadius: 8
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                labels: {
+                  color: '#fff',
+                  font: { family: 'Orbitron', size: 14 }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#fff', font: { family: 'Inter', size: 12 } },
+                grid: { color: 'rgba(255,255,255,0.08)' }
+              },
+              y: {
+                ticks: { color: '#fff', font: { family: 'Inter', size: 12 } },
+                grid: { color: 'rgba(255,255,255,0.08)' }
+              }
+            }
+          }
+        });
+      }
+      // Abas de navegação
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(tab => tab.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+        });
+      });
+      showLoginPage();
+    });
+  </script>
+</body>
+</html>
